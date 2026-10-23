@@ -1,3 +1,4 @@
+
 # clasificacion_variables.R — Parte A: clasificación de las variables de clientes.csv.
 #
 # El archivo data/clientes.csv tiene 12 clientes y 7 variables (más el id).
@@ -8,65 +9,117 @@
 # clasificación — el criterio (¿tiene sentido la mitad del valor? ¿hay orden
 # entre las categorías?) decide.
 #
-# Uso (desde la raíz del repositorio):  Rscript scripts/clasificacion_variables.R
+# Uso (desde la raíz del repositorio): Rscript scripts/clasificacion_variables.R
 
 clientes <- read.csv("data/clientes.csv", stringsAsFactors = FALSE)
 
 # ---------------------------------------------------------------------------
 # 1. Estructura del archivo
 # ---------------------------------------------------------------------------
-cat(sprintf("Dimensiones: %d filas × %d columnas\n", nrow(clientes), ncol(clientes)))
+cat(sprintf("Dimensiones: %d filas × %d columnas\n",
+            nrow(clientes), ncol(clientes)))
 print(clientes)
 
 # ---------------------------------------------------------------------------
 # 2. Tipos inferidos (str) — la pista que da el lenguaje
 # ---------------------------------------------------------------------------
 str(clientes)
-# TODO 1: ¿qué columnas llegan como número (int) y cuáles como texto
-#         (character)? Anótalo para el informe. Ojo con satisfaccion: llega
-#         como número y es ordinal ("4 no es el doble de 2") — la justificación
-#         va en el informe.
+
+# TODO 1: Identificar las columnas numericas y de texto
+columnas_numericas <- names(clientes)[sapply(clientes, is.numeric)]
+columnas_texto <- names(clientes)[sapply(clientes, is.character)]
+
+cat("\nColumnas numericas:\n")
+print(columnas_numericas)
+
+cat("\nColumnas de texto:\n")
+print(columnas_texto)
+
+cat("\nNota: satisfaccion llega como numero, pero es ordinal.\n")
 
 # ---------------------------------------------------------------------------
 # 3. Valores únicos — ¿cuántas categorías hay y cuáles son?
 # ---------------------------------------------------------------------------
-# TODO 2: completa el bucle para imprimir, por columna, cuántos valores únicos
-#         hay y cuáles son. Pista: for (columna in names(clientes)) { ... } con
-#         unique() y length(). ¿Cuántas categorías tiene genero?
-# for (columna in names(clientes)) {
-#   ...
-# }
+# TODO 2: Mostrar los valores unicos de cada columna
+for (columna in names(clientes)) {
+  valores <- unique(clientes[[columna]])
+
+  cat("\nVariable:", columna, "\n")
+  cat("Cantidad de valores unicos:", length(valores), "\n")
+  print(valores)
+}
 
 # ---------------------------------------------------------------------------
 # 4. Declarar el orden de las variables ordinales
 # ---------------------------------------------------------------------------
-# Una ordinal se guarda como texto y su orden natural se pierde: alfabéticamente
-# "Posgrado" iría antes que "Primaria", que no tiene sentido. En R, eso se
-# declara con el factor ordenado.
-#
-# TODO 3: convierte nivel_educacion con factor(..., levels = c(...), ordered = TRUE).
-#         Comprueba con min(): debe devolver "Primaria".
-# TODO 4: haz lo mismo con satisfaccion (escala 1–5 como etiquetas ordenadas).
-#         Prueba extra: ¿qué pasa si en levels escribes "Postgrado" (con t) para
-#         nivel_educacion? Cuenta los faltantes con sum(is.na(...)) — la trampa
-#         del typo es silenciosa.
+# TODO 3: Convertir nivel_educacion en factor ordenado
+orden_educacion <- c(
+  "Primaria",
+  "Secundaria",
+  "Universidad",
+  "Posgrado"
+)
+
+clientes$nivel_educacion <- factor(
+  clientes$nivel_educacion,
+  levels = orden_educacion,
+  ordered = TRUE
+)
+
+cat("\nNivel de educacion ordenado:\n")
+print(levels(clientes$nivel_educacion))
+
+cat("\nNivel minimo de educacion:\n")
+print(min(clientes$nivel_educacion))
+
+# TODO 4: Convertir satisfaccion en factor ordinal
+clientes$satisfaccion <- factor(
+  clientes$satisfaccion,
+  levels = 1:5,
+  ordered = TRUE
+)
+
+cat("\nSatisfaccion ordenada:\n")
+print(levels(clientes$satisfaccion))
+
+cat("\n¿Satisfaccion es ordinal?\n")
+print(is.ordered(clientes$satisfaccion))
+
+# Prueba extra: escribir "Postgrado" en lugar de "Posgrado"
+orden_incorrecto <- c(
+  "Primaria",
+  "Secundaria",
+  "Universidad",
+  "Postgrado"
+)
+
+educacion_incorrecta <- factor(
+  read.csv("data/clientes.csv")$nivel_educacion,
+  levels = orden_incorrecto,
+  ordered = TRUE
+)
+
+cat("\nPrueba con 'Postgrado' mal escrito:\n")
+cat("Cantidad de valores faltantes:\n")
+print(sum(is.na(educacion_incorrecta)))
 
 # ---------------------------------------------------------------------------
 # 5. Resumen de la clasificación (para el informe)
 # ---------------------------------------------------------------------------
-# TODO 5: completa el resumen con el tipo de cada variable (el criterio que
-#         justifica cada clasificación va en el informe).
+# TODO 5: Clasificar cada variable
 clasificacion <- c(
-  cliente_id         = "…",
-  edad               = "…",
-  numero_hijos       = "…",
-  genero             = "…",
-  nivel_educacion    = "…",
-  ciudad             = "…",
-  ingresos_mensuales = "…",
-  satisfaccion       = "…"
+  cliente_id         = "Categorica nominal (identificador)",
+  edad               = "Numerica discreta (registrada en anos completos)",
+  numero_hijos       = "Numerica discreta",
+  genero             = "Categorica nominal",
+  nivel_educacion    = "Categorica ordinal",
+  ciudad             = "Categorica nominal",
+  ingresos_mensuales = "Numerica continua",
+  satisfaccion       = "Categorica ordinal"
 )
+
 cat("\nResumen de la clasificación (para el informe):\n")
 for (variable in names(clasificacion)) {
-  cat(sprintf("  %-18s %s\n", variable, clasificacion[[variable]]))
+  cat(sprintf("  %-18s %s\n",
+              variable, clasificacion[[variable]]))
 }
