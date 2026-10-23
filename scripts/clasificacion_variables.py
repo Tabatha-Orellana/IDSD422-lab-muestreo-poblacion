@@ -1,3 +1,4 @@
+
 # clasificacion_variables.py — Parte A: clasificación de las variables de clientes.csv.
 #
 # El archivo data/clientes.csv tiene 12 clientes y 7 variables (más el id).
@@ -28,18 +29,32 @@ print()
 print("Tipos inferidos (dtype):")
 print(clientes.dtypes)
 print()
-# TODO 1: ¿qué columnas llegan como número y cuáles como texto? Anótalo para el
-#         informe. Ojo con satisfaccion: llega como número y es ordinal
-#         ("4 no es el doble de 2") — la justificación va en el informe.
+
+# TODO 1: Identificar las columnas numericas y de texto
+columnas_numericas = clientes.select_dtypes(include="number").columns
+columnas_texto = clientes.select_dtypes(include="object").columns
+
+print("Columnas numericas:")
+print(list(columnas_numericas))
+
+print("Columnas de texto:")
+print(list(columnas_texto))
+
+print("Nota: satisfaccion llega como numero, pero es ordinal.")
+print()
 
 # ---------------------------------------------------------------------------
 # 3. Valores únicos — ¿cuántas categorías hay y cuáles son?
 # ---------------------------------------------------------------------------
-# TODO 2: completa el bucle para imprimir, por columna, cuántos valores únicos
-#         hay y cuáles son. Pista: for columna in clientes.columns: ...  con
-#         clientes[columna].unique() y len(). ¿Cuántas categorías tiene genero?
-# for columna in clientes.columns:
-#     ...
+# TODO 2: Mostrar valores unicos de cada columna
+for columna in clientes.columns:
+    valores = clientes[columna].unique()
+
+    print(f"Variable: {columna}")
+    print(f"Cantidad de valores unicos: {len(valores)}")
+    print(f"Valores: {valores}")
+    print()
+
 print()
 
 # ---------------------------------------------------------------------------
@@ -48,30 +63,87 @@ print()
 # Una ordinal se guarda como texto (o como número) y su orden natural se pierde:
 # alfabéticamente "Posgrado" iría antes que "Primaria", que no tiene sentido.
 #
-# TODO 3: convierte nivel_educacion a categoría ordenada.
-#         Pista: astype(pd.CategoricalDtype(categories=[...], ordered=True)).
-#         Comprueba con .min(): debe devolver "Primaria".
-# TODO 4: haz lo mismo con satisfaccion (escala 1–5 como etiquetas ordenadas).
-#         Prueba extra: ¿qué pasa si en la lista de categorías escribes
-#         "Postgrado" (con t) para nivel_educacion? Cuenta los faltantes con
-#         .isna().sum() — la trampa del typo es silenciosa.
+# TODO 3: Convertir nivel_educacion en categoria ordenada
+orden_educacion = [
+    "Primaria",
+    "Secundaria",
+    "Universidad",
+    "Posgrado"
+]
+
+tipo_educacion = pd.CategoricalDtype(
+    categories=orden_educacion,
+    ordered=True
+)
+
+clientes["nivel_educacion"] = clientes["nivel_educacion"].astype(
+    tipo_educacion
+)
+
+print("Nivel de educacion ordenado:")
+print(clientes["nivel_educacion"].dtype)
+
+print("Nivel minimo:")
+print(clientes["nivel_educacion"].min())
+
+print()
+
+# TODO 4: Convertir satisfaccion en categoria ordinal
+orden_satisfaccion = [1, 2, 3, 4, 5]
+
+tipo_satisfaccion = pd.CategoricalDtype(
+    categories=orden_satisfaccion,
+    ordered=True
+)
+
+clientes["satisfaccion"] = clientes["satisfaccion"].astype(
+    tipo_satisfaccion
+)
+
+print("Satisfaccion ordenada:")
+print(clientes["satisfaccion"].dtype)
+
+print("Nivel minimo de satisfaccion:")
+print(clientes["satisfaccion"].min())
+
+# Prueba extra: escribir incorrectamente "Postgrado"
+orden_incorrecto = [
+    "Primaria",
+    "Secundaria",
+    "Universidad",
+    "Postgrado"
+]
+
+tipo_incorrecto = pd.CategoricalDtype(
+    categories=orden_incorrecto,
+    ordered=True
+)
+
+educacion_incorrecta = pd.read_csv(
+    "data/clientes.csv"
+)["nivel_educacion"].astype(tipo_incorrecto)
+
+print("\nPrueba de error con 'Postgrado':")
+print("Valores faltantes:")
+print(educacion_incorrecta.isna().sum())
+
 print()
 
 # ---------------------------------------------------------------------------
 # 5. Resumen de la clasificación (para el informe)
 # ---------------------------------------------------------------------------
-# TODO 5: completa el resumen con el tipo de cada variable (el criterio que
-#         justifica cada clasificación va en el informe).
+# TODO 5: Completar la clasificacion de cada variable
 clasificacion = {
-    "cliente_id": "…",
-    "edad": "…",
-    "numero_hijos": "…",
-    "genero": "…",
-    "nivel_educacion": "…",
-    "ciudad": "…",
-    "ingresos_mensuales": "…",
-    "satisfaccion": "…",
+    "cliente_id": "Categorica nominal (identificador)",
+    "edad": "Numerica discreta (registrada en anos completos)",
+    "numero_hijos": "Numerica discreta",
+    "genero": "Categorica nominal",
+    "nivel_educacion": "Categorica ordinal",
+    "ciudad": "Categorica nominal",
+    "ingresos_mensuales": "Numerica continua",
+    "satisfaccion": "Categorica ordinal",
 }
+
 print("Resumen de la clasificación (para el informe):")
 for variable, tipo in clasificacion.items():
     print(f"  {variable:20s} {tipo}")
